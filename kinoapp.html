@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kino & Serien</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080808;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;
+  --text:#e4dfd4;--text2:#9c9489;--text3:#5a5550;
+  --gold:#c9a04a;--gold2:#e8c06a;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ─── VIEWS ─── */
+.view{display:none}
+.view.active{display:block}
+
+/* ─── TOP NAV (shown on non-home views) ─── */
+.topnav{
+  position:sticky;top:0;z-index:200;
+  display:flex;align-items:center;gap:1.25rem;
+  padding:0.7rem 1.5rem;
+  background:rgba(8,8,8,0.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.nav-back{
+  font-size:0.78rem;color:var(--text2);cursor:pointer;
+  display:flex;align-items:center;gap:0.4rem;padding:0.3rem 0.7rem;
+  border:1px solid var(--border2);border-radius:99px;transition:all .15s;
+  background:transparent;font-family:'DM Sans',sans-serif;
+}
+.nav-back:hover{background:var(--bg3);color:var(--text)}
+.nav-title{font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold2)}
+.nav-tabs{margin-left:auto;display:flex;gap:0.5rem}
+.nav-tab{
+  font-size:0.72rem;padding:0.3rem 0.9rem;border-radius:99px;
+  border:1px solid var(--border2);background:transparent;color:var(--text2);
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;
+}
+.nav-tab.active{background:var(--gold);color:#111;border-color:var(--gold);font-weight:500}
+.nav-tab:hover:not(.active){background:var(--bg3);color:var(--text)}
+
+/* ─── HOME PAGE ─── */
+#home{
+  min-height:100vh;
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 20%, rgba(201,160,74,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(120,80,180,0.05) 0%, transparent 60%),
+    var(--bg);
+}
+.home-hero{
+  padding:4rem 2rem 2.5rem;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+}
+.home-logo{
+  font-size:2.8rem;margin-bottom:0.75rem;
+  animation:pulse 4s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
+.home-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2rem,5vw,3.2rem);
+  font-weight:700;color:var(--gold2);
+  letter-spacing:-0.02em;line-height:1.1;
+  margin-bottom:0.6rem;
+}
+.home-sub{font-size:0.82rem;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase}
+
+/* ─── MAIN ENTRY CARDS ─── */
+.home-entries{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:1px;background:var(--border);
+  margin:0 0 1px;
+}
+@media(max-width:580px){.home-entries{grid-template-columns:1fr}}
+.entry-card{
+  padding:2.5rem 2rem;cursor:pointer;
+  background:var(--bg);transition:background .2s;
+  display:flex;flex-direction:column;align-items:flex-start;gap:0.75rem;
+  position:relative;overflow:hidden;
+}
+.entry-card::before{
+  content:'';position:absolute;inset:0;
+  opacity:0;transition:opacity .3s;
+}
+.entry-card.filme::before{background:radial-gradient(ellipse at 30% 50%, rgba(201,160,74,0.08) 0%, transparent 70%)}
+.entry-card.serien::before{background:radial-gradient(ellipse at 70% 50%, rgba(120,80,200,0.08) 0%, transparent 70%)}
+.entry-card:hover{background:var(--bg2)}
+.entry-card:hover::before{opacity:1}
+.entry-icon{font-size:2.2rem;line-height:1}
+.entry-label{
+  font-family:'Playfair Display',serif;
+  font-size:1.8rem;font-weight:700;
+  color:var(--text);letter-spacing:-0.01em;
+}
+.entry-count{font-size:0.75rem;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase}
+.entry-genres{
+  display:flex;flex-wrap:wrap;gap:0.35rem;margin-top:0.25rem;
+}
+.entry-gbadge{
+  font-size:0.62rem;padding:0.2rem 0.65rem;border-radius:99px;
+  font-weight:500;letter-spacing:0.04em;text-transform:uppercase;
+}
+.entry-arrow{
+  position:absolute;right:1.5rem;bottom:1.5rem;
+  font-size:1.2rem;color:var(--text3);transition:all .2s;
+}
+.entry-card:hover .entry-arrow{color:var(--gold);transform:translateX(4px)}
+
+/* ─── RANDOM PICKER ─── */
+.random-section{
+  padding:2.5rem 2rem;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+}
+.random-title{
+  font-family:'Playfair Display',serif;
+  font-size:1.1rem;color:var(--text2);margin-bottom:0.4rem;
+}
+.random-sub{font-size:0.75rem;color:var(--text3);margin-bottom:1.5rem;letter-spacing:0.05em}
+.random-btn{
+  display:inline-flex;align-items:center;gap:0.6rem;
+  padding:0.85rem 2rem;
+  background:linear-gradient(135deg,rgba(201,160,74,0.15),rgba(201,160,74,0.08));
+  border:1px solid rgba(201,160,74,0.35);
+  border-radius:99px;
+  color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;
+  cursor:pointer;transition:all .2s;letter-spacing:0.03em;
+}
+.random-btn:hover{
+  background:linear-gradient(135deg,rgba(201,160,74,0.25),rgba(201,160,74,0.15));
+  border-color:var(--gold);transform:translateY(-1px);
+}
+.random-btn:active{transform:translateY(0)}
+.dice{font-size:1.1rem;transition:transform .3s}
+.random-btn:hover .dice{transform:rotate(180deg)}
+
+.random-results{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:1px;background:var(--border);
+  margin-top:1.5rem;
+  opacity:0;transform:translateY(12px);
+  transition:opacity .4s ease,transform .4s ease;
+}
+.random-results.show{opacity:1;transform:translateY(0)}
+.rcard{
+  background:var(--bg2);padding:1.25rem 1.5rem;
+  display:flex;flex-direction:column;gap:0.5rem;
+}
+.rcard-genre{
+  font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:0.1rem;
+}
+.rcard-title{
+  font-family:'Playfair Display',serif;
+  font-size:1.15rem;font-weight:500;color:var(--text);line-height:1.3;
+}
+.rcard-orig{font-size:0.68rem;color:var(--text3);font-style:italic}
+.rcard-meta{font-size:0.72rem;color:var(--text2)}
+.rcard-note{font-size:0.75rem;color:var(--text2);line-height:1.5;font-style:italic;margin-top:0.2rem}
+.rcard-imdb{font-size:0.8rem;font-weight:500}
+
+/* ─── DB CONTROLS (shared) ─── */
+.db-controls{
+  padding:1rem 1.5rem;border-bottom:1px solid var(--border);
+  display:flex;flex-direction:column;gap:0.65rem;
+  position:sticky;top:49px;z-index:100;
+  background:var(--bg);backdrop-filter:blur(12px);
+}
+.filter-section{display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center}
+.filter-label{font-size:0.63rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-right:0.25rem;min-width:3.8rem;flex-shrink:0}
+.pill{
+  font-size:0.7rem;padding:0.28rem 0.8rem;border-radius:99px;
+  border:1px solid var(--border2);background:transparent;color:var(--text2);
+  cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:400;
+  transition:all .15s;white-space:nowrap;
+}
+.pill:hover{background:var(--bg3);color:var(--text)}
+.pill.active{background:var(--gold);color:#111;border-color:var(--gold);font-weight:500}
+.pill.active.t{background:#7c5ca0;border-color:#7c5ca0;color:#e8deff}
+.pill.active.d{background:#2d7a5a;border-color:#2d7a5a;color:#c8f0e0}
+.pill.active.a{background:#a04020;border-color:#a04020;color:#ffe0d0}
+.pill.active.e{background:#8a6800;border-color:#8a6800;color:#fff0b0}
+.pill.active.f{background:#1a5a90;border-color:#1a5a90;color:#c0e4ff}
+.pill.active.k{background:#7a3060;border-color:#7a3060;color:#ffd0ec}
+.pill.active.o{background:#4a4a4a;border-color:#4a4a4a;color:#e0e0e0}
+.bot-row{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+.search-wrap{flex:1;min-width:180px;position:relative}
+.search-wrap::before{content:'⌕';position:absolute;left:.7rem;top:50%;transform:translateY(-50%);color:var(--text3);font-size:.95rem;pointer-events:none}
+.db-search{width:100%;padding:.45rem .7rem .45rem 1.9rem;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:.8rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
+.db-search:focus{border-color:var(--gold)}
+.db-search::placeholder{color:var(--text3)}
+.tog-wrap{display:flex;align-items:center;gap:.45rem;cursor:pointer;flex-shrink:0}
+.tog-lbl{font-size:.7rem;color:var(--text2);white-space:nowrap}
+.tog{position:relative;width:30px;height:17px;flex-shrink:0}
+.tog input{display:none}
+.tog-t{position:absolute;inset:0;background:var(--bg4);border:1px solid var(--border2);border-radius:99px;transition:.2s;cursor:pointer}
+.tog-t::after{content:'';position:absolute;width:11px;height:11px;background:var(--text3);border-radius:50%;top:2px;left:2px;transition:.2s}
+.tog input:checked+.tog-t{background:var(--gold);border-color:var(--gold)}
+.tog input:checked+.tog-t::after{transform:translateX(13px);background:#111}
+.stats-bar{font-size:.68rem;color:var(--text3);letter-spacing:.05em;padding:.35rem 1.5rem;border-bottom:1px solid var(--border);background:var(--bg)}
+
+/* ─── CARDS GRID ─── */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1px;background:var(--border)}
+.card{background:var(--bg);padding:1rem 1.15rem 1.7rem;transition:background .15s;position:relative}
+.card:hover{background:var(--bg2)}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:.65rem;margin-bottom:.25rem}
+.card-title{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:500;color:var(--text);line-height:1.3;flex:1}
+.card-orig{font-size:.64rem;color:var(--text3);margin-bottom:.3rem;font-style:italic}
+.card-right{display:flex;flex-direction:column;align-items:flex-end;gap:.25rem;flex-shrink:0}
+.gbadge{font-size:.58rem;padding:.18rem .55rem;border-radius:99px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.gb-t{background:rgba(124,92,160,.2);color:#c4a8f0;border:1px solid rgba(124,92,160,.3)}
+.gb-d{background:rgba(45,122,90,.2);color:#80d4b0;border:1px solid rgba(45,122,90,.3)}
+.gb-a{background:rgba(180,80,30,.2);color:#f0a080;border:1px solid rgba(180,80,30,.3)}
+.gb-e{background:rgba(180,140,20,.2);color:#f0d080;border:1px solid rgba(180,140,20,.3)}
+.gb-f{background:rgba(30,100,170,.2);color:#80c4f0;border:1px solid rgba(30,100,170,.3)}
+.gb-k{background:rgba(160,50,110,.2);color:#f090c8;border:1px solid rgba(160,50,110,.3)}
+.gb-o{background:rgba(90,90,90,.25);color:#c0c0c0;border:1px solid rgba(90,90,90,.4)}
+.imdb-score{font-size:.7rem;font-weight:500}
+.ia{color:#f0b030}.ib{color:#f07820}.ic{color:#e04020}.id{color:#c9a04a;font-size:.76rem}
+.card-meta{font-size:.65rem;color:var(--text3);margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.card-note{font-size:.7rem;color:var(--text2);line-height:1.45;font-style:italic}
+.new-tag{display:inline-block;font-size:.53rem;padding:.1rem .42rem;background:rgba(201,160,74,.15);color:var(--gold);border:1px solid rgba(201,160,74,.3);border-radius:99px;vertical-align:middle;margin-left:.35rem;font-style:normal;letter-spacing:.04em;text-transform:uppercase}
+.de-tag{display:inline-block;font-size:.53rem;padding:.1rem .42rem;background:rgba(30,100,220,.15);color:#80b8f0;border:1px solid rgba(30,100,220,.25);border-radius:99px;vertical-align:middle;margin-left:.3rem;font-style:normal}
+.status-badge{font-size:.56rem;padding:.13rem .48rem;border-radius:99px;font-weight:500;white-space:nowrap}
+.s-on{background:rgba(40,160,80,.15);color:#60d090;border:1px solid rgba(40,160,80,.25)}
+.s-off{background:rgba(90,90,90,.15);color:var(--text3);border:1px solid rgba(90,90,90,.2)}
+.gseen-wrap{position:absolute;bottom:.65rem;right:1rem;display:flex;align-items:center;gap:.28rem}
+.gseen-wrap label{font-size:.6rem;color:var(--text3);cursor:pointer;user-select:none}
+.gseen-cb{width:11px;height:11px;accent-color:var(--gold);cursor:pointer}
+.card.seen{opacity:.45}
+.card.seen .card-title{text-decoration:line-through}
+.empty{grid-column:1/-1;text-align:center;padding:3.5rem 2rem;color:var(--text3);font-family:'Playfair Display',serif;font-size:1rem}
+
+@media(max-width:640px){
+  .db-controls{padding:.9rem 1rem}
+  .home-hero{padding:2.5rem 1rem 1.5rem}
+  .entry-card{padding:1.75rem 1.25rem}
+  .random-section{padding:1.75rem 1rem}
+  .cards-grid{grid-template-columns:1fr}
+  .card{padding:.9rem 1rem 1.6rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ HOME ══════════════════ -->
+<div id="home" class="view active">
+  <div class="home-hero">
+    <div class="home-logo">🎬</div>
+    <h1 class="home-title">Kino & Serien</h1>
+    <div class="home-sub">~380 Filme · ~200 Serien · kuratierte Auswahl</div>
+  </div>
+
+  <div class="home-entries">
+    <div class="entry-card filme" onclick="showView('filme')">
+      <div class="entry-icon">🎬</div>
+      <div class="entry-label">Filme</div>
+      <div class="entry-count">~380 Filme · 1995–2026</div>
+      <div class="entry-genres">
+        <span class="entry-gbadge gb-t">Thriller</span>
+        <span class="entry-gbadge gb-d">Drama</span>
+        <span class="entry-gbadge gb-a">Action</span>
+        <span class="entry-gbadge gb-e">Epos</span>
+        <span class="entry-gbadge gb-f">Fantasy</span>
+        <span class="entry-gbadge gb-k">Komödie</span>
+        <span class="entry-gbadge gb-o">Doku</span>
+      </div>
+      <div class="entry-arrow">→</div>
+    </div>
+    <div class="entry-card serien" onclick="showView('serien')">
+      <div class="entry-icon">📺</div>
+      <div class="entry-label">Serien</div>
+      <div class="entry-count">~200 Serien · eine Zeile pro Serie</div>
+      <div class="entry-genres">
+        <span class="entry-gbadge gb-t">Thriller & Crime</span>
+        <span class="entry-gbadge gb-d">Drama</span>
+        <span class="entry-gbadge gb-a">Action</span>
+        <span class="entry-gbadge gb-f">Fantasy & Sci-Fi</span>
+        <span class="entry-gbadge gb-k">Komödie</span>
+        <span class="entry-gbadge gb-o">Doku</span>
+      </div>
+      <div class="entry-arrow">→</div>
+    </div>
+  </div>
+
+  <div class="random-section">
+    <div class="random-title">Heute Abend keine Ahnung?</div>
+    <div class="random-sub">Drück auf den Knopf – 3 zufällige Filme aus 3 verschiedenen Genres</div>
+    <button class="random-btn" onclick="pickRandom()">
+      <span class="dice">🎲</span> Drei zufällige Empfehlungen
+    </button>
+    <div class="random-results" id="random-results"></div>
+  </div>
+</div>
+
+<!-- ══════════════════ FILME ══════════════════ -->
+<div id="view-filme" class="view">
+  <div class="topnav">
+    <button class="nav-back" onclick="showView('home')">← Home</button>
+    <span class="nav-title">🎬 Filme</span>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showView('filme')">Filme</button>
+      <button class="nav-tab" onclick="showView('serien')">Serien</button>
+    </div>
+  </div>
+  <div class="db-controls" id="f-controls">
+    <div class="filter-section" id="fg">
+      <span class="filter-label">Genre</span>
+      <button class="pill active" data-g="all">Alle</button>
+      <button class="pill t" data-g="t">Thriller</button>
+      <button class="pill d" data-g="d">Drama</button>
+      <button class="pill a" data-g="a">Action</button>
+      <button class="pill e" data-g="e">Epos</button>
+      <button class="pill f" data-g="f">Fantasy</button>
+      <button class="pill k" data-g="k">Komödie</button>
+      <button class="pill o" data-g="o">Doku</button>
+    </div>
+    <div class="filter-section" id="fi">
+      <span class="filter-label">IMDb</span>
+      <button class="pill active" data-i="0">Alle</button>
+      <button class="pill" data-i="7.0-7.49">7,0–7,49</button>
+      <button class="pill" data-i="7.5-7.99">7,5–7,99</button>
+      <button class="pill" data-i="8.0-8.49">8,0–8,49</button>
+      <button class="pill" data-i="8.5+">≥ 8,5</button>
+    </div>
+    <div class="filter-section" id="fr">
+      <span class="filter-label">Laufzeit</span>
+      <button class="pill active" data-r="0">Alle</button>
+      <button class="pill" data-r="100">≤ 100 min</button>
+      <button class="pill" data-r="120">≤ 120 min</button>
+      <button class="pill" data-r="150">≤ 150 min</button>
+      <button class="pill" data-r="999">&gt; 150 min</button>
+    </div>
+    <div class="bot-row">
+      <div class="search-wrap"><input class="db-search" id="f-search" type="text" placeholder="Film suchen …"></div>
+      <label class="tog-wrap"><div class="tog"><input type="checkbox" id="f-rt"><span class="tog-t"></span></div><span class="tog-lbl">Nur ab 2021</span></label>
+      <label class="tog-wrap"><div class="tog"><input type="checkbox" id="f-ht"><span class="tog-t"></span></div><span class="tog-lbl">Nur ungesehen</span></label>
+    </div>
+  </div>
+  <div class="stats-bar" id="f-stats"></div>
+  <div class="cards-grid" id="f-grid"></div>
+</div>
+
+<!-- ══════════════════ SERIEN ══════════════════ -->
+<div id="view-serien" class="view">
+  <div class="topnav">
+    <button class="nav-back" onclick="showView('home')">← Home</button>
+    <span class="nav-title">📺 Serien</span>
+    <div class="nav-tabs">
+      <button class="nav-tab" onclick="showView('filme')">Filme</button>
+      <button class="nav-tab active" onclick="showView('serien')">Serien</button>
+    </div>
+  </div>
+  <div class="db-controls" id="s-controls">
+    <div class="filter-section" id="sg">
+      <span class="filter-label">Genre</span>
+      <button class="pill active" data-g="all">Alle</button>
+      <button class="pill t" data-g="t">Thriller & Crime</button>
+      <button class="pill d" data-g="d">Drama</button>
+      <button class="pill a" data-g="a">Action</button>
+      <button class="pill f" data-g="f">Fantasy & Sci-Fi</button>
+      <button class="pill k" data-g="k">Komödie</button>
+      <button class="pill o" data-g="o">Doku</button>
+    </div>
+    <div class="filter-section" id="si">
+      <span class="filter-label">IMDb</span>
+      <button class="pill active" data-i="0">Alle</button>
+      <button class="pill" data-i="7.0-7.49">7,0–7,49</button>
+      <button class="pill" data-i="7.5-7.99">7,5–7,99</button>
+      <button class="pill" data-i="8.0-8.49">8,0–8,49</button>
+      <button class="pill" data-i="8.5+">≥ 8,5</button>
+    </div>
+    <div class="filter-section" id="ss">
+      <span class="filter-label">Staffeln</span>
+      <button class="pill active" data-s="0">Alle</button>
+      <button class="pill" data-s="1">1 Staffel</button>
+      <button class="pill" data-s="2">2–3 Staffeln</button>
+      <button class="pill" data-s="4">4–6 Staffeln</button>
+      <button class="pill" data-s="7">7+ Staffeln</button>
+    </div>
+    <div class="filter-section" id="sst">
+      <span class="filter-label">Status</span>
+      <button class="pill active" data-st="all">Alle</button>
+      <button class="pill" data-st="done">Abgeschlossen</button>
+      <button class="pill" data-st="on">Läuft noch</button>
+    </div>
+    <div class="bot-row">
+      <div class="search-wrap"><input class="db-search" id="s-search" type="text" placeholder="Serie suchen …"></div>
+      <label class="tog-wrap"><div class="tog"><input type="checkbox" id="s-rt"><span class="tog-t"></span></div><span class="tog-lbl">Nur ab 2020</span></label>
+      <label class="tog-wrap"><div class="tog"><input type="checkbox" id="s-ht"><span class="tog-t"></span></div><span class="tog-lbl">Nur ungesehen</span></label>
+    </div>
+  </div>
+  <div class="stats-bar" id="s-stats"></div>
+  <div class="cards-grid" id="s-grid"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// FILM DATA  [de, orig, year, dir, genre, imdb, runtime, note, recent]
+// ═══════════════════════════════════════════════════════════
+const FILMS=[
+["Se7en","Se7en",1995,"David Fincher","t",8.6,127,"Das Ende wirst du nie vergessen.",0],
+["Die üblichen Verdächtigen","The Usual Suspects",1995,"Bryan Singer","t",8.5,106,"Wer ist Keyser Söze? Kino-Legende.",0],
+["Das Spiel","The Game",1997,"David Fincher","t",7.8,129,"Paranoia pur – nichts ist, was es scheint.",0],
+["Funny Games","Funny Games",1997,"Michael Haneke","t",7.6,108,"Haneke provoziert den Zuschauer direkt.",0],
+["Ein einfacher Plan","A Simple Plan",1998,"Sam Raimi","t",7.5,121,"Gier vernichtet alles. Brillant unberechenbar.",0],
+["Fight Club","Fight Club",1999,"David Fincher","t",8.8,139,"Der Twist, den man wirklich nicht kommen sieht.",0],
+["Memento","Memento",2000,"Christopher Nolan","t",8.4,113,"Rückwärts erzählt. Vorwärts verstanden.",0],
+["Die Anderen","The Others",2001,"Alejandro Amenábar","t",7.6,101,"Atmosphärischer Geisterthriller mit großem Twist.",0],
+["Mulholland Drive","Mulholland Drive",2001,"David Lynch","t",7.9,147,"Neo-Noir-Alptraum – absolut unvorhersehbar.",0],
+["Oldboy","Oldboy",2003,"Park Chan-wook","t",8.4,120,"Koreanischer Schock-Thriller. Das Ende ist ein Hammer.",0],
+["Eine Geschichte von zwei Schwestern","A Tale of Two Sisters",2003,"Kim Jee-woon","t",7.3,115,"Koreanischer Horror-Thriller. Meisterhaft.",0],
+["Caché – Versteckt","Caché",2005,"Michael Haneke","t",7.2,117,"Kein Ende verunsichert mehr als dieses.",0],
+["Prestige – Die Meister der Magie","The Prestige",2006,"Christopher Nolan","t",8.5,130,"Zwei Rivalen, ein Geheimnis – null Auflösung bis zuletzt.",0],
+["Zodiac","Zodiac",2007,"David Fincher","t",7.7,157,"Echter Kriminalfall – obsessiv, beklemmend, ungelöst.",0],
+["No Country for Old Men","No Country for Old Men",2007,"Coen Brothers","t",8.2,122,"Anton Chigurh ist das pure Böse.",0],
+["Das Geheimnis in ihren Augen","El secreto de sus ojos",2009,"Juan J. Campanella","t",8.0,129,"Argentinisches Meisterwerk. Das Finale erschüttert.",0],
+["Ich sah den Teufel","I Saw the Devil",2010,"Kim Jee-woon","t",7.8,141,"Koreanischer Rache-Thriller der Extraklasse.",0],
+["Incendies – Wut des Schicksals","Incendies",2010,"Denis Villeneuve","t",8.1,131,"Das Finale ist eines der stärksten des Kinos.",0],
+["Shutter Island","Shutter Island",2010,"Martin Scorsese","t",8.1,138,"Mind-bending bis zum bitteren Ende.",0],
+["Black Swan","Black Swan",2010,"Darren Aronofsky","t",8.0,108,"Psychologischer Horror in der Ballettwelt.",0],
+["Prisoners","Prisoners",2013,"Denis Villeneuve","t",8.1,153,"Wie weit gehst du für dein Kind?",0],
+["Enemy","Enemy",2013,"Denis Villeneuve","t",6.9,90,"Doppelgänger-Paranoia – rätselhaft bis zuletzt.",0],
+["Coherence","Coherence",2013,"James Ward Byrkit","t",7.2,89,"Parallelwelten. Das Ende ist Wahnsinn.",0],
+["Nightcrawler","Nightcrawler",2014,"Dan Gilroy","t",7.9,117,"Gyllenhaal auf dem Karriereweg durch die Hölle.",0],
+["Gone Girl – Das perfekte Opfer","Gone Girl",2014,"David Fincher","t",8.1,149,"Finchers perfektester Twist.",0],
+["Ex Machina","Ex Machina",2014,"Alex Garland","t",7.7,108,"KI und Kontrolle – Kammerspiel-Alptraum.",0],
+["Wilde Geschichten","Relatos salvajes",2014,"Damián Szifron","t",8.0,122,"Argentinische Episoden über Rache. Brillant.",0],
+["Das Geschenk","The Gift",2015,"Joel Edgerton","t",7.0,108,"Kleiner Film, großer Twist am Ende.",0],
+["Die Taschendiebin","The Handmaiden",2016,"Park Chan-wook","t",8.1,145,"Twist nach Twist. Koreas bester Film.",0],
+["Contratiempo – Der Verdächtige","Contratiempo",2016,"Oriol Paulo","t",8.1,106,"Spanischer Thriller – der Twist ist unglaublich.",0],
+["Arrival","Arrival",2016,"Denis Villeneuve","t",7.9,116,"Zeit neu gedacht – emotional und hochintelligent.",0],
+["Get Out","Get Out",2017,"Jordan Peele","t",7.7,104,"Gesellschaftskritik als Horrorfilm verkleidet.",0],
+["Annihilation","Annihilation",2018,"Alex Garland","t",6.8,115,"Sci-Fi-Horror der Extraklasse.",0],
+["Hereditary – Das Vermächtnis","Hereditary",2018,"Ari Aster","t",7.3,127,"Familientrauma trifft übernatürlichen Horror.",0],
+["Burning","Burning",2018,"Lee Chang-dong","t",7.5,148,"Südkoreanische Langsamkeit als Hochspannung.",0],
+["Der Leuchtturm","The Lighthouse",2019,"Robert Eggers","t",7.5,109,"Einsamkeit und Wahnsinn auf einem Leuchtturm.",0],
+["Midsommar","Midsommar",2019,"Ari Aster","t",7.1,148,"Folk-Horror in Schweden. Hell und beklemmend.",0],
+["Uncut Gems","Uncut Gems",2019,"Safdie Brothers","t",7.4,135,"Permanenter erhöhter Puls. Keine Pause.",0],
+["Knives Out – Mord ist Familiensache","Knives Out",2019,"Rian Johnson","t",7.9,130,"Modernes Whodunnit-Meisterwerk.",0],
+["Parasite","Parasite",2019,"Bong Joon-ho","t",8.5,132,"Palme d'Or + Oscar – das Ende dreht alles um.",0],
+["Titane","Titane",2021,"Julia Ducournau","t",6.8,108,"Palme d'Or – verstörend, originell.",1],
+["The Menu","The Menu",2022,"Mark Mylod","t",7.2,107,"Gourmet-Horror. Überraschend originell.",1],
+["Speak No Evil","Speak No Evil",2022,"Christian Tafdrup","t",7.1,97,"Urlaubsbekanntschaft als Horrorfilm.",1],
+["Glass Onion","Glass Onion",2022,"Rian Johnson","t",7.1,139,"Whodunnit auf einer Privatinsel.",1],
+["Triangle of Sadness","Triangle of Sadness",2022,"Ruben Östlund","t",7.3,147,"Klassengesellschaft auf dem Schiff.",1],
+["Anatomie eines Falls","Anatomie d'une chute",2023,"Justine Triet","t",7.8,152,"Schuldig oder unschuldig? Man entscheidet nie sicher.",1],
+["Saltburn","Saltburn",2023,"Emerald Fennell","t",7.1,131,"Englische Aristokratie. Das Finale ist ein Schlag.",1],
+["The Substance","The Substance",2024,"Coralie Fargeat","t",7.3,141,"Body-Horror-Feminismus. Kompromisslos.",1],
+["Konklave","Conclave",2024,"Edward Berger","t",7.4,120,"Vatikan-Intrigen – der Twist ist ein Hammer.",1],
+["Die Zone des Interesses","The Zone of Interest",2023,"Jonathan Glazer","t",7.3,105,"Holocaust ohne Bilder des Grauens.",1],
+["Good Will Hunting","Good Will Hunting",1997,"Gus Van Sant","d",8.3,126,"Williams und Damon auf Karrierehöhepunkt.",0],
+["Magnolia","Magnolia",1999,"Paul Thomas Anderson","d",8.0,188,"Ensemble-Drama. Es regnet Frösche.",0],
+["American Beauty","American Beauty",1999,"Sam Mendes","d",8.3,122,"Suburbia als Gefängnis.",0],
+["Almost Famous – Fast berühmt","Almost Famous",2000,"Cameron Crowe","d",7.9,122,"Rock-Journalismus als Coming-of-Age.",0],
+["A Beautiful Mind","A Beautiful Mind",2001,"Ron Howard","d",8.2,135,"Crowe als Genie zwischen Genie und Wahnsinn.",0],
+["Adaptation","Adaptation",2002,"Charlie Kaufman","d",7.7,114,"Meta-Drehbuch über das Scheitern am Drehbuch.",0],
+["Die Stunden","The Hours",2002,"Stephen Daldry","d",7.6,114,"Drei Frauen, drei Epochen, eine Verbindung.",0],
+["Die 25. Stunde","25th Hour",2002,"Spike Lee","d",7.7,135,"Lees unterschätztester Film.",0],
+["Mystic River","Mystic River",2003,"Clint Eastwood","d",7.9,138,"Kindheitstrauma kehrt zurück. Penn at his best.",0],
+["21 Gramm","21 Grams",2003,"Alejandro G. Iñárritu","d",7.7,124,"Chronologisch zerschnitten – intensiv.",0],
+["Vergiss mein nicht!","Eternal Sunshine of the Spotless Mind",2004,"Michel Gondry","d",8.3,108,"Was bleibt, wenn Erinnerungen verschwinden?",0],
+["Sideways","Sideways",2004,"Alexander Payne","d",7.4,127,"Zwei Männer auf Weintour. Komisch und traurig.",0],
+["Million Dollar Baby","Million Dollar Baby",2004,"Clint Eastwood","d",8.1,132,"Boxdrama mit einem Twist, der trifft.",0],
+["Capote","Capote",2005,"Bennett Miller","d",7.4,114,"Hoffman als Truman Capote. Unfassbar präzise.",0],
+["Brokeback Mountain","Brokeback Mountain",2005,"Ang Lee","d",7.7,134,"Ang Lee auf dem absoluten Höhepunkt.",0],
+["Babel","Babel",2006,"Alejandro G. Iñárritu","d",7.5,142,"Vier Geschichten verbunden durch einen Schuss.",0],
+["Departed – Unter Feinden","The Departed",2006,"Martin Scorsese","d",8.5,151,"Wer ist der Verräter? Jeder könnte es sein.",0],
+["There Will Be Blood","There Will Be Blood",2007,"Paul Thomas Anderson","d",8.2,158,"Day-Lewis trinkt deinen Milkshake.",0],
+["The Wrestler","The Wrestler",2008,"Darren Aronofsky","d",7.9,109,"Rourke als gefallener Held. Herzzerreißend.",0],
+["Slumdog Millionär","Slumdog Millionaire",2008,"Danny Boyle","d",8.0,120,"Energiebündel. Bombay. Schicksal.",0],
+["The King's Speech – Die Rede des Königs","The King's Speech",2010,"Tom Hooper","d",8.0,118,"Firth und Rush. Britisches Drama der Extraklasse.",0],
+["The Social Network","The Social Network",2010,"David Fincher","d",7.8,120,"Fincher dreht Filmgeschichte über eine Website.",0],
+["The Artist","The Artist",2011,"Michel Hazanavicius","d",7.9,100,"Stummfilm in der Moderne. Charmant.",0],
+["Liebe","Amour",2012,"Michael Haneke","d",7.9,127,"Altern und Sterben mit absoluter Würde.",0],
+["Her","Her",2013,"Spike Jonze","d",8.0,126,"Liebe zu einem Betriebssystem. Nie kitschig.",0],
+["12 Years a Slave","12 Years a Slave",2013,"Steve McQueen","d",8.1,134,"Brutal. Notwendig. Unvergesslich.",0],
+["Dallas Buyers Club","Dallas Buyers Club",2013,"Jean-Marc Vallée","d",8.0,117,"McConaughey transformiert sich komplett.",0],
+["Nebraska","Nebraska",2013,"Alexander Payne","d",7.7,115,"Schwarz-Weiß. Midwest. Vater und Sohn.",0],
+["Whiplash","Whiplash",2014,"Damien Chazelle","d",8.5,106,"Exzellenz um den Preis des Menschlichen.",0],
+["Boyhood","Boyhood",2014,"Richard Linklater","d",7.9,165,"12 Jahre gedreht – und man spürt jedes davon.",0],
+["The Big Short","The Big Short",2015,"Adam McKay","d",7.8,130,"Finanzkrise 2008 als rasanter Film.",0],
+["Spotlight","Spotlight",2015,"Tom McCarthy","d",8.1,129,"Investigativer Journalismus als High-Tension-Drama.",0],
+["Raum","Room",2015,"Lenny Abrahamson","d",8.1,118,"Larson als Mutter, die alles für ihren Sohn tut.",0],
+["La La Land","La La Land",2016,"Damien Chazelle","d",8.0,128,"Musicals und Träume und was davon bleibt.",0],
+["Moonlight","Moonlight",2016,"Barry Jenkins","d",7.4,111,"Drei Phasen eines Lebens. Leise. Gewaltig.",0],
+["Manchester by the Sea","Manchester by the Sea",2016,"Kenneth Lonergan","d",7.8,137,"Trauer, die sich nicht heilen lässt.",0],
+["The Florida Project","The Florida Project",2017,"Sean Baker","d",7.6,111,"Armut und Kindheit. Hoffnung und Desillusionierung.",0],
+["Lady Bird","Lady Bird",2017,"Greta Gerwig","d",7.4,93,"Mutterschaft und Selbstfindung in Sacramento.",0],
+["Phantom Thread","Phantom Thread",2017,"Paul Thomas Anderson","d",7.5,130,"Anderson und Day-Lewis. Meisterlich.",0],
+["Three Billboards Outside Ebbing, Missouri","Three Billboards",2017,"Martin McDonagh","d",8.2,115,"Frances McDormand on fire.",0],
+["Call Me by Your Name","Call Me by Your Name",2017,"Luca Guadagnino","d",7.9,132,"Sommer in Italien als Erfahrung, nicht als Film.",0],
+["Capernaum","Capernaum",2018,"Nadine Labaki","d",8.0,126,"Kind klagt seine Eltern an. Libanesisches Meisterwerk.",0],
+["Favourite – Intrigen und Irrsinn","The Favourite",2018,"Yorgos Lanthimos","d",7.5,119,"Königinnenhof-Intrigen. Scharf und böse.",0],
+["Roma","Roma",2018,"Alfonso Cuarón","d",7.7,135,"Meisterhaftes Schwarz-Weiß. Cuaróns persönlichstes Werk.",0],
+["Green Book","Green Book",2018,"Peter Farrelly","d",8.2,130,"Roadtrip durch den Süden. Herz und Humor.",0],
+["Porträt einer jungen Frau in Flammen","Portrait de la jeune fille en feu",2019,"Céline Sciamma","d",8.1,122,"Liebesgeschichte als malerisches Kunstwerk.",0],
+["Joker","Joker",2019,"Todd Phillips","d",8.4,122,"Phoenix transformiert sich. Kontrovers und grandios.",0],
+["Little Women","Little Women",2019,"Greta Gerwig","d",7.9,135,"Gerwig revitalisiert den Klassiker.",0],
+["The Irishman","The Irishman",2019,"Martin Scorsese","d",7.8,209,"Scorseses Abgesang auf die Gangsterfilm-Ära.",0],
+["Marriage Story","Marriage Story",2019,"Noah Baumbach","d",7.9,137,"Die ehrlichste Scheidungsgeschichte des Kinos.",0],
+["Nomadland","Nomadland",2020,"Chloé Zhao","d",7.3,108,"Poetisch. Still. Tiefgreifend.",0],
+["Der Vater","The Father",2020,"Florian Zeller","d",8.3,97,"Hopkins demenzkrank – das Beste seiner Karriere.",0],
+["Minari","Minari",2020,"Lee Isaac Chung","d",7.5,115,"Immigrant-Story mit herzergreifender Stille.",0],
+["Drive My Car","Drive My Car",2021,"Ryusuke Hamaguchi","d",7.6,179,"Drei Stunden, die wie ein Atemzug vergehen.",1],
+["CODA","CODA",2021,"Sian Heder","d",7.6,111,"Tochter gehörloser Eltern will singen.",1],
+["Aftersun","Aftersun",2022,"Charlotte Wells","d",7.7,101,"Vater-Tochter-Urlaub als verlorene Erinnerung.",1],
+["Im Westen nichts Neues","All Quiet on the Western Front",2022,"Edward Berger","d",7.8,148,"Deutsche Antikriegs-Meisterleistung.",1],
+["Die Geister von Inisherin","The Banshees of Inisherin",2022,"Martin McDonagh","d",7.7,114,"Freundschaft, Sturheit und irisches Elend.",1],
+["Oppenheimer","Oppenheimer",2023,"Christopher Nolan","d",8.4,180,"Das Schuldgefühl des Erfinders der Apokalypse.",1],
+["Killers of the Flower Moon","Killers of the Flower Moon",2023,"Martin Scorsese","d",7.7,206,"3,5 Stunden Scorsese ohne eine schwache Minute.",1],
+["Past Lives","Past Lives",2023,"Celine Song","d",7.8,106,"In-Yun. Das Ende macht einen still.",1],
+["Arme Dinge","Poor Things",2023,"Yorgos Lanthimos","d",7.8,141,"Feministischer Frankenstein. Bizarr und brillant.",1],
+["Der Brutalist","The Brutalist",2024,"Brady Corbet","d",7.6,215,"3,5 Stunden Einwanderer-Epos. Visuell atemberaubend.",1],
+["Anora","Anora",2024,"Sean Baker","d",7.7,138,"Palme d'Or 2024 – lebhaft und herzergreifend.",1],
+["Heat","Heat",1995,"Michael Mann","a",8.3,170,"Die beste Cop-vs-Räuber-Geschichte aller Zeiten.",0],
+["Matrix","The Matrix",1999,"Wachowskis","a",8.7,136,"Action-Philosophie. Nichts im Kino war danach dasselbe.",0],
+["Tiger and Dragon","Crouching Tiger, Hidden Dragon",2000,"Ang Lee","a",7.9,120,"Kung-Fu als Poesie. Oscar-Meisterwerk.",0],
+["Black Hawk Down","Black Hawk Down",2001,"Ridley Scott","a",7.7,144,"Kriegsfilm ohne Heldenkitsch.",0],
+["Die Bourne Identität","The Bourne Identity",2002,"Doug Liman","a",7.9,119,"Spy-Action neu definiert.",0],
+["Kill Bill: Volume 1","Kill Bill: Vol. 1",2003,"Quentin Tarantino","a",8.2,111,"Rache als Kunstform. Visuell unübertroffen.",0],
+["Kill Bill: Volume 2","Kill Bill: Vol. 2",2004,"Quentin Tarantino","a",8.0,137,"Langsamer und emotional – der bessere Kill Bill.",0],
+["Collateral","Collateral",2004,"Michael Mann","a",7.5,120,"Cruise als eiskalter Killer.",0],
+["Batman Begins","Batman Begins",2005,"Christopher Nolan","a",8.3,140,"Der Superhelden-Film, der das Genre ernstnimmt.",0],
+["Casino Royale","Casino Royale",2006,"Martin Campbell","a",8.0,144,"Bond neu erfunden. Craig ist das Bond-Ideal.",0],
+["Children of Men","Children of Men",2006,"Alfonso Cuarón","a",7.9,109,"One-Shot-Szenen, die man an der Filmschule zeigt.",0],
+["The Dark Knight","The Dark Knight",2008,"Christopher Nolan","a",9.0,152,"Ledger als Joker: der beste Bösewicht des Kinos.",0],
+["96 Hours","Taken",2008,"Pierre Morel","a",7.8,90,"Liam Neeson und seine besondere Fähigkeit.",0],
+["Inglourious Basterds","Inglourious Basterds",2009,"Quentin Tarantino","a",8.3,153,"Tarantino reißt die Geschichte um.",0],
+["Inception","Inception",2010,"Christopher Nolan","a",8.8,148,"Träume in Träumen. Ist der Kreisel umgefallen?",0],
+["Drive","Drive",2011,"Nicolas Winding Refn","a",7.8,100,"Stilles Neon-Noir. Gosling auf dem Karrierehöhepunkt.",0],
+["The Raid","The Raid",2011,"Gareth Evans","a",7.6,101,"Indonesischer Action-Film. Choreografie als Hochkunst.",0],
+["Skyfall","Skyfall",2012,"Sam Mendes","a",7.7,143,"Das beste Bond-Abenteuer der Craig-Ära.",0],
+["Django Unchained","Django Unchained",2012,"Quentin Tarantino","a",8.4,165,"Tarantino revanchiert sich für die Geschichte.",0],
+["Gravity","Gravity",2013,"Alfonso Cuarón","a",7.7,91,"91 Minuten Panik im Weltraum.",0],
+["Edge of Tomorrow","Edge of Tomorrow",2014,"Doug Liman","a",7.9,113,"Groundhog Day als Sci-Fi-Actionfilm.",0],
+["John Wick","John Wick",2014,"Chad Stahelski","a",7.4,101,"Neudefinition des Action-Genres.",0],
+["Mad Max: Fury Road","Mad Max: Fury Road",2015,"George Miller","a",8.1,120,"Zwei Stunden nonstop Verfolgungsjagd – Meisterwerk.",0],
+["Sicario","Sicario",2015,"Denis Villeneuve","a",7.6,121,"Drogenkrieg ohne Moral. Tunnel-Szene ist legendär.",0],
+["The Revenant – Der Rückkehrer","The Revenant",2015,"Alejandro G. Iñárritu","a",8.0,156,"DiCaprio kämpft sich durch Tod und Schnee.",0],
+["Comancheria","Hell or High Water",2016,"David Mackenzie","a",7.7,102,"Neo-Western der Extraklasse.",0],
+["Dunkirk","Dunkirk",2017,"Christopher Nolan","a",7.9,106,"Drei Zeitebenen. Totale Immersion.",0],
+["Baby Driver","Baby Driver",2017,"Edgar Wright","a",7.6,113,"Soundtrack als Choreographie. Einmalig.",0],
+["Mission: Impossible – Fallout","Mission: Impossible – Fallout",2018,"Christopher McQuarrie","a",7.7,147,"Das Beste der Reihe.",0],
+["Avengers: Infinity War","Avengers: Infinity War",2018,"Russo Brothers","a",8.4,149,"Das Ende erschüttert wirklich.",0],
+["1917","1917",2019,"Sam Mendes","a",8.3,119,"Scheinbar eine Einstellung. Real-Time-Spannung.",0],
+["Everything Everywhere All at Once","Everything Everywhere All at Once",2022,"Daniels","a",8.0,139,"Multiversum, Mutter-Tochter, Chaos – und Oscar.",1],
+["Top Gun: Maverick","Top Gun: Maverick",2022,"Joseph Kosinski","a",8.3,130,"Der beste Sequel, den niemand erwartet hat.",1],
+["John Wick: Kapitel 4","John Wick: Chapter 4",2023,"Chad Stahelski","a",7.7,169,"Staircase-Szene: Action als Hochkunst.",1],
+["Dune: Teil Zwei","Dune: Part Two",2024,"Denis Villeneuve","a",8.5,166,"Sci-Fi-Spektakel auf epischer Leinwand.",1],
+["Braveheart","Braveheart",1995,"Mel Gibson","e",8.4,177,"Freedom! Epik pur.",0],
+["Gladiator","Gladiator",2000,"Ridley Scott","e",8.5,155,"Muster aller Epos-Filme der 2000er.",0],
+["Der Herr der Ringe: Die Gefährten","The Lord of the Rings: Fellowship",2001,"Peter Jackson","e",8.8,178,"Das Tor zu Mittelerde.",0],
+["Der Herr der Ringe: Die zwei Türme","The Lord of the Rings: Two Towers",2002,"Peter Jackson","e",8.7,179,"Helms Deep. Nuff said.",0],
+["Der Herr der Ringe: Die Rückkehr des Königs","The Lord of the Rings: Return of the King",2003,"Peter Jackson","e",9.0,201,"Bestes Abschluss-Epos der Kinogeschichte.",0],
+["Der letzte Samurai","The Last Samurai",2003,"Edward Zwick","e",7.8,154,"Kultfilm. Katsumoto und Algren.",0],
+["Troja","Troy",2004,"Wolfgang Petersen","e",7.2,163,"Spektakel und Heldenmythos.",0],
+["Königreich der Himmel","Kingdom of Heaven",2005,"Ridley Scott","e",7.2,144,"Director's Cut ist ein Meisterwerk.",0],
+["Apocalypto","Apocalypto",2006,"Mel Gibson","e",7.8,138,"Maya-Reich im Niedergang. Intensiv und brutal.",0],
+["Avatar – Aufbruch nach Pandora","Avatar",2009,"James Cameron","e",7.9,162,"Visuell revolutionär. Geschichte einfach.",0],
+["Hacksaw Ridge – Die Entscheidung","Hacksaw Ridge",2016,"Mel Gibson","e",8.1,139,"Kriegsfilm über Pazifismus. Überwältigend.",0],
+["Dune: Teil Eins","Dune: Part One",2021,"Denis Villeneuve","e",8.0,155,"Visuelles Spektakel – bestes Sci-Fi-Epos seit Jahren.",1],
+["Der Northman","The Northman",2022,"Robert Eggers","e",7.1,137,"Wikinger-Rache-Epos. Roh und archaisch.",1],
+["Prinzessin Mononoke","Princess Mononoke",1997,"Hayao Miyazaki","f",8.4,133,"Natur gegen Zivilisation. Miyazaki zu seiner besten Zeit.",0],
+["Chihiros Reise ins Zauberland","Spirited Away",2001,"Hayao Miyazaki","f",8.6,125,"Miyazakis Opus magnum. Kompromisslos fantastisch.",0],
+["Big Fish","Big Fish",2003,"Tim Burton","f",8.0,125,"Vater-Sohn und die Grenze zwischen Mythos und Realität.",0],
+["Das wandelnde Schloss","Howl's Moving Castle",2004,"Hayao Miyazaki","f",8.2,119,"Liebevoll animiert und tief berührend.",0],
+["Harry Potter und der Gefangene von Askaban","Harry Potter and the Prisoner of Azkaban",2004,"Alfonso Cuarón","f",7.9,141,"Der einzige HP-Film, der Kinokunst ist.",0],
+["Pans Labyrinth","Pan's Labyrinth",2006,"Guillermo del Toro","f",8.2,118,"Krieg und Märchen. Ein magisches Meisterwerk.",0],
+["Coraline","Coraline",2009,"Henry Selick","f",7.7,100,"Stopmotion-Horror für Erwachsene mit Kinderherz.",0],
+["Fantastischer Mr. Fox","Fantastic Mr. Fox",2009,"Wes Anderson","f",7.9,87,"Wes Anderson animiert. Einzigartig und liebevoll.",0],
+["The Fall","The Fall",2006,"Tarsem Singh","f",7.8,117,"Visuell atemberaubend. Märchen im Märchen.",0],
+["Hugo Cabret","Hugo",2011,"Martin Scorsese","f",7.5,126,"Scorsese liebt das frühe Kino. Wundervoll.",0],
+["Midnight in Paris","Midnight in Paris",2011,"Woody Allen","f",7.7,94,"Paris und Nostalgie als Zeitreise.",0],
+["Life of Pi – Schiffbruch mit Tiger","Life of Pi",2012,"Ang Lee","f",7.9,127,"Ein Junge auf einem Floß mit einem Tiger.",0],
+["Die Legende der Prinzessin Kaguya","The Tale of Princess Kaguya",2013,"Isao Takahata","f",8.0,137,"Studio Ghibli-Meisterwerk.",0],
+["Alles eine Frage der Zeit","About Time",2013,"Richard Curtis","f",7.8,123,"Zeitreise und Vater-Sohn. Das Ende macht einen weinen.",0],
+["Grand Budapest Hotel","The Grand Budapest Hotel",2014,"Wes Anderson","f",8.1,99,"Wes Anderson at his most Wes Anderson.",0],
+["Interstellar","Interstellar",2014,"Christopher Nolan","f",8.7,169,"Liebe durch Zeit und Raum. Wissenschaft als Emotion.",0],
+["Alles steht Kopf","Inside Out",2015,"Pete Docter","f",8.1,95,"Pixar erklärt Emotionen. Für alle Altersklassen.",0],
+["Thor: Tag der Entscheidung","Thor: Ragnarok",2017,"Taika Waititi","f",7.9,130,"Der witzigste Marvel-Film und gleichzeitig der beste.",0],
+["Coco","Coco",2017,"Lee Unkrich","f",8.4,105,"Mexikanisches Totenfest. Pixar macht Weinfilm.",0],
+["Spider-Man: A New Universe","Spider-Man: Into the Spider-Verse",2018,"Persichetti/Ramsey","f",8.4,117,"Revolutionäres Animations-Kino.",0],
+["Klaus","Klaus",2019,"Sergio Pablos","f",8.2,96,"Weihnachtsfilm als animiertes Kunstwerk.",0],
+["Soul","Soul",2020,"Pete Docter","f",8.1,101,"Was macht das Leben lebenswert? Pixar auf Höchstniveau.",0],
+["Der gestiefelte Kater: Der letzte Wunsch","Puss in Boots: The Last Wish",2022,"Joel Crawford","f",7.9,100,"Meisterhaftes Sequel. Tod als Leitmotiv.",1],
+["Flow","Flow",2024,"Gints Zilbalodis","f",8.0,84,"Stille Katzen-Animation. Weltuntergang als Poesie.",1],
+["Der wilde Roboter","The Wild Robot",2024,"Chris Sanders","f",8.0,102,"Überraschend emotionales Animations-Meisterwerk.",1],
+["Spider-Man: Across the Spider-Verse","Spider-Man: Across the Spider-Verse",2023,"Kemp Powers","f",8.6,140,"Noch mutiger als Teil 1. Animations-Revolution.",1],
+["Fargo","Fargo",1996,"Coen Brothers","k",8.1,98,"Mord im Schnee. Schwarze Komödie.",0],
+["The Big Lebowski","The Big Lebowski",1998,"Coen Brothers","k",8.1,117,"Der Dude lässt grüßen. Kult.",0],
+["Being John Malkovich","Being John Malkovich",1999,"Spike Jonze","k",7.8,112,"Absurdismus als Komödienkunst.",0],
+["O Brother, Where Art Thou?","O Brother, Where Art Thou?",2000,"Coen Brothers","k",7.7,107,"Odysseus im Depression-Era-Amerika. Musik und Witz.",0],
+["Superbad","Superbad",2007,"Greg Mottola","k",7.6,113,"Komische Coming-of-Age-Nacht. Kult.",0],
+["Ratatouille","Ratatouille",2007,"Brad Bird","k",8.1,111,"Pixar und Cuisine. Ego wird zerlegt.",0],
+["WALL·E","WALL-E",2008,"Andrew Stanton","k",8.4,98,"Pixar über Liebe und Umweltzerstörung.",0],
+["Brügge sehen... und sterben?","In Bruges",2008,"Martin McDonagh","k",7.9,107,"Zwei Killer in Belgien. Schwarz wie Teer.",0],
+["Hangover","The Hangover",2009,"Todd Phillips","k",7.7,100,"Las Vegas-Katerstunde als Genreneudefinition.",0],
+["Oben","Up",2009,"Pete Docter","k",8.3,96,"Die ersten 10 Minuten machen erwachsene Männer weinen.",0],
+["Little Miss Sunshine","Little Miss Sunshine",2006,"Dayton & Faris","k",7.8,101,"Road-Trip mit dysfunktionaler Familie.",0],
+["Ziemlich beste Freunde","The Intouchables",2011,"Nakache & Toledano","k",8.6,112,"Franzöischer Klassiker. Herzergreifend.",0],
+["Silver Linings","Silver Linings Playbook",2012,"David O. Russell","k",7.7,122,"Cooper und Lawrence. Romcom mit echtem Biss.",0],
+["5 Zimmer Küche Sarg","What We Do in the Shadows",2014,"Taika Waititi","k",7.7,86,"Vampir-Mockumentary. Der Ursprung des Kults.",0],
+["Birdman","Birdman",2014,"Alejandro G. Iñárritu","k",7.7,119,"Broadway, Eitelkeit und One-Shot-Kamera.",0],
+["Hunt for the Wilderpeople","Hunt for the Wilderpeople",2016,"Taika Waititi","k",8.0,101,"Waititi entdeckt die Wildnis Neuseelands.",0],
+["Paddington 2","Paddington 2",2017,"Paul King","k",7.8,103,"Der wohl liebste Film des Jahrzehnts.",0],
+["The Death of Stalin","The Death of Stalin",2017,"Armando Iannucci","k",7.3,107,"Politik-Satire auf Höchstniveau.",0],
+["Palm Springs","Palm Springs",2020,"Max Barbakow","k",7.4,90,"Groundhog Day auf einer Hochzeit. Frisch.",0],
+["Die schlechteste Person der Welt","The Worst Person in the World",2021,"Joachim Trier","k",7.9,121,"Millennial-Komödie aus Oslo. Scharf.",1],
+["Barbie","Barbie",2023,"Greta Gerwig","k",7.0,114,"Kapitalismus und Feminismus in Pink.",1],
+["Die Betreuung","The Holdovers",2023,"Alexander Payne","k",8.0,133,"Schüler und Lehrer über Weihnachten. Zeitlos.",1],
+["A Real Pain","A Real Pain",2024,"Jesse Eisenberg","k",7.6,90,"Holocaust-Erinnerungsreise mit Herz und Witz.",1],
+["Mann auf dem Seil","Man on Wire",2008,"James Marsh","o",7.7,94,"Hochseil-Spaziergang zwischen den Twin Towers.",0],
+["Food, Inc.","Food, Inc.",2008,"Robert Kenner","o",7.8,94,"Was essen wir wirklich? Unbequeme Wahrheiten.",0],
+["Inside Job","Inside Job",2010,"Charles Ferguson","o",8.2,108,"Finanzkrise 2008 erklärt. Wütend machend.",0],
+["The Act of Killing","The Act of Killing",2012,"Joshua Oppenheimer","o",8.2,115,"Indonesische Killer spielen ihre Morde nach.",0],
+["Blackfish","Blackfish",2013,"Gabriela Cowperthwaite","o",7.9,83,"SeaWorld und Orca Tilikum. Systemkritik.",0],
+["Citizenfour","Citizenfour",2014,"Laura Poitras","o",8.0,114,"Snowden live in einem Hotelzimmer.",0],
+["Amy","Amy",2015,"Asif Kapadia","o",7.8,128,"Amy Winehouses tragisches Leben.",0],
+["Senna","Senna",2010,"Asif Kapadia","o",8.5,104,"Ayrton Sennas Leben als mitreißende Doku.",0],
+["The Cove – Es beginnt mit der Lüge","The Cove",2009,"Louie Psihoyos","o",8.5,91,"Delfinjagd in Japan. Doku-Thriller pur.",0],
+["Won't You Be My Neighbor?","Won't You Be My Neighbor?",2018,"Morgan Neville","o",8.5,94,"Mr. Rogers und die Kraft von Güte.",0],
+["Free Solo","Free Solo",2018,"Chai Vasarhelyi","o",8.2,100,"Alex Honnold klettert ohne Seil. Herzrasen pur.",0],
+["Minding the Gap","Minding the Gap",2018,"Bing Liu","o",8.1,93,"Skateboarden, Vaterlosigkeit und Missbrauch.",0],
+["Für Sama","For Sama",2019,"Waad Al-Kateab","o",8.3,95,"Mutter filmt Syrien-Krieg für ihre Tochter.",0],
+["Suche nach Sugar Man","Searching for Sugar Man",2012,"Malik Bendjelloul","o",8.1,86,"Der unbekannteste Rockstar der Welt.",0],
+["Mein Oktopuslehrer","My Octopus Teacher",2020,"Pippa Ehrlich","o",8.1,85,"Taucher und Oktopus. Natur als emotionale Reise.",0],
+["Die Rettung","The Rescue",2021,"Chai Vasarhelyi","o",8.0,107,"Tham Luang Höhlenrettung. Spannend wie ein Thriller.",1],
+["Summer of Soul","Summer of Soul",2021,"Questlove","o",8.0,117,"Harlem 1969 – vergessenes Woodstock.",1],
+["Flee","Flee",2021,"Jonas Poher Rasmussen","o",8.1,89,"Animiertes Refugee-Memoir. Berührender Genrebruch.",1],
+["Navalny","Navalny",2022,"Daniel Roher","o",7.7,99,"Alexei Navalny und der Kampf gegen Putin.",1],
+["20 Tage in Mariupol","20 Days in Mariupol",2023,"Mstyslav Chernov","o",8.7,94,"Oscar-Gewinner. Kriegsberichterstattung.",1],
+["No Other Land","No Other Land",2024,"Yuval Abraham & Basel Adra","o",8.3,95,"Israelisch-palästinensische Partnerschaft.",1]
+];
+
+// ═══════════════════════════════════════════════════════════
+// SERIES DATA  [de, orig, start, creator, genre, imdb, seasons, ep_min, note, ongoing, recent]
+// ═══════════════════════════════════════════════════════════
+const SERIES=[
+["Die Sopranos","The Sopranos",1999,"David Chase","t",9.2,6,52,"Der Ur-Vater aller modernen Premium-Serien. Unerreicht.",0,0],
+["The Wire","The Wire",2002,"David Simon","t",9.3,5,58,"Beste Cop-Serie je gedreht. Baltimore als System.",0,0],
+["Breaking Bad","Breaking Bad",2008,"Vince Gilligan","t",9.5,5,47,"Der vollkommenste Serienplot aller Zeiten.",0,0],
+["True Detective","True Detective",2014,"Nic Pizzolatto","t",9.0,4,55,"Staffel 1: absolutes Meisterwerk. Rest ebenfalls gut.",0,0],
+["Better Call Saul","Better Call Saul",2015,"Vince Gilligan","t",9.0,6,47,"Wächst sich zum Ebenbürtigen von Breaking Bad aus.",0,0],
+["Fargo","Fargo",2014,"Noah Hawley","t",8.9,5,53,"Jede Staffel ein eigenständiges Meisterwerk.",1,0],
+["Peaky Blinders","Peaky Blinders",2013,"Steven Knight","t",8.8,6,55,"Tommy Shelby ist eine der größten Serienfiguren.",0,0],
+["Dark","Dark",2017,"Baran bo Odar","t",8.8,3,60,"Deutsche Zeitreise-Saga. Komplex, düster, brillant.",0,0],
+["Narcos","Narcos",2015,"Chris Brancato","t",8.8,3,49,"Pablo Escobar als tragische Figur.",0,0],
+["Mindhunter","Mindhunter",2017,"David Fincher","t",8.6,2,60,"Fincher dreht Serial-Killer-Psychologie. Hypnotisch.",0,0],
+["Happy Valley","Happy Valley",2014,"Sally Wainwright","t",8.6,3,58,"Beste britische Krimiserie. Catherine Cawood unvergesslich.",0,0],
+["Line of Duty","Line of Duty",2012,"Jed Mercurio","t",8.6,6,59,"Wer ist H? Sechs Staffeln Hochspannung.",0,0],
+["Die Nacht danach","The Night Of",2016,"Steve Zaillian","t",8.7,1,60,"Eine Nacht verändert alles. Perfekte Miniserie.",0,0],
+["Severance","Severance",2022,"Dan Erickson","t",8.7,2,50,"Arbeit und Leben getrennt. Verstörend und genial.",1,1],
+["Babylon Berlin","Babylon Berlin",2017,"Tom Tykwer","t",8.3,4,45,"Weimarer Republik als Noir-Thriller. Weltklasse.",1,0],
+["Ozark","Ozark",2017,"Bill Dubuque","t",8.4,4,60,"Familienthriller im Mittleren Westen.",0,0],
+["Mr. Robot","Mr. Robot",2015,"Sam Esmail","t",8.5,4,55,"Hacking als psychologisches Labyrinth. Unberechenbar.",0,0],
+["Hannibal","Hannibal",2013,"Bryan Fuller","t",8.5,3,44,"Hannibal Lecter als eleganter Gastgeber. Schockierend schön.",0,0],
+["Big Little Lies","Big Little Lies",2017,"David E. Kelley","t",8.5,2,60,"Monterey, Lügen, Mord. Witherspoon und Kidman.",0,0],
+["Broadchurch","Broadchurch",2013,"Chris Chibnall","t",8.4,3,47,"Britischer Mordfall – emotional und präzise.",0,0],
+["The Americans","The Americans",2013,"Joe Weisberg","t",8.4,6,45,"Sowjetische Spione als amerikanische Vorortfamilie.",0,0],
+["Mare of Easttown","Mare of Easttown",2021,"Brad Ingelsby","t",8.5,1,59,"Kate Winslet trägt diese Miniserie allein.",0,1],
+["Bodyguard","Bodyguard",2018,"Jed Mercurio","t",8.5,1,59,"Britischer Politthriller. Tempo von Anfang an.",0,0],
+["Sharp Objects","Sharp Objects",2018,"Marti Noxon","t",8.3,1,60,"Amy Adams brillant. Kleinstadtgeheimnisse und Trauma.",0,0],
+["Narcos: Mexico","Narcos: Mexico",2018,"Carlo Bernard","t",8.5,3,49,"Würdige Fortsetzung der Narcos-Welt.",0,0],
+["Slow Horses","Slow Horses",2022,"Will Smith","t",8.1,4,47,"MI5-Ausschuss als Thriller. Exzellent.",1,1],
+["Top Boy","Top Boy",2011,"Ronan Bennett","t",8.6,4,50,"Londoner Drogenmilieu. Roh und menschlich.",0,0],
+["Killing Eve","Killing Eve",2018,"Phoebe Waller-Bridge","t",8.1,4,43,"Sandra Oh und Jodie Comer. Das beste Duell im TV.",0,0],
+["The Sinner","The Sinner",2017,"Derek Simonds","t",7.9,4,44,"Warum tut jemand das? Staffel 1 ist die beste.",0,0],
+["Squid Game","Squid Game",2021,"Hwang Dong-hyuk","t",8.0,2,55,"Sozialkritisches Survival-Spektakel aus Korea.",1,1],
+["1899","1899",2022,"Baran bo Odar","t",7.5,1,50,"Deutscher Mystery-Thriller auf hoher See.",0,1],
+["Yellowjackets","Yellowjackets",2021,"Ashley Lyle","t",7.8,3,60,"Überlebende und ihr dunkles Geheimnis. Zwei Zeitebenen.",1,1],
+["Suits","Suits",2011,"Aaron Korsh","t",8.5,9,43,"Anwaltsserie mit Charme. Harvey Specter ist Kult.",0,0],
+["Succession","Succession",2018,"Jesse Armstrong","d",8.9,4,60,"Medienimperium, Machtspiele, Familientragödie. Meisterwerk.",0,0],
+["Tschernobyl","Chernobyl",2019,"Craig Mazin","d",9.4,1,60,"Fünf Stunden über die größte Katastrophe Europas.",0,0],
+["Band of Brothers","Band of Brothers",2001,"Steven Spielberg","d",9.4,1,70,"Zweiter Weltkrieg aus Soldatenperspektive.",0,0],
+["Mad Men","Mad Men",2007,"Matthew Weiner","d",8.7,7,47,"Werbewelt der 60er als Gesellschaftsporträt.",0,0],
+["The Bear","The Bear",2022,"Christopher Storer","d",8.8,3,35,"Küche als Kriegsschauplatz. Intensiv.",1,1],
+["Fleabag","Fleabag",2016,"Phoebe Waller-Bridge","d",8.7,2,28,"Direkt in die Kamera. Komisch, traurig, perfekt.",0,0],
+["Die Marvelous Mrs. Maisel","The Marvelous Mrs. Maisel",2017,"Amy Sherman-Palladino","d",8.7,5,57,"Stand-Up-Komödie in den 50ern. Tempo und Witz.",0,0],
+["Six Feet Under","Six Feet Under",2001,"Alan Ball","d",8.6,5,55,"Leben und Sterben durch eine Bestatterfamilie.",0,0],
+["The Crown","The Crown",2016,"Peter Morgan","d",8.6,6,58,"Britisches Königshaus von innen. Opulent.",0,0],
+["Atlanta","Atlanta",2016,"Donald Glover","d",8.6,4,28,"Donald Glover dreht etwas komplett Eigenes.",0,0],
+["Downton Abbey","Downton Abbey",2010,"Julian Fellowes","d",8.6,6,58,"Englisches Landgut 1912–1926. Meisterhaft inszeniert.",0,0],
+["Barry","Barry",2018,"Bill Hader","d",8.4,4,30,"Auftragskiller will Schauspieler werden.",0,0],
+["Pachinko","Pachinko",2022,"Soo Hugh","d",8.4,2,60,"Koreanische Familiensaga über Generationen. Bildgewaltig.",1,1],
+["Euphoria","Euphoria",2019,"Sam Levinson","d",8.4,2,55,"Teenager, Drogen, Trauma. Visuell revolutionär.",1,0],
+["Dopesick","Dopesick",2021,"Danny Strong","d",8.5,1,60,"Opioid-Krise in Amerika. Wütend und notwendig.",0,1],
+["Normal People","Normal People",2020,"Lenny Abrahamson","d",8.3,1,30,"Liebe zwischen Connell und Marianne. Zart und präzise.",0,1],
+["Unorthodox","Unorthodox",2020,"Anna Winger","d",8.3,1,55,"Aus orthodoxer Gemeinschaft nach Berlin. Berührend.",0,1],
+["I May Destroy You","I May Destroy You",2020,"Michaela Coel","d",8.3,1,25,"MeToo als persönliche Erkundung. Roh und ehrlich.",0,1],
+["The White Lotus","The White Lotus",2021,"Mike White","d",8.0,3,55,"Reiche Leute im Luxusresort. Scharfe Satire.",1,1],
+["Beef","Beef",2023,"Lee Sung Jin","d",8.4,1,30,"Road-Rage eskaliert. Steven Yeun und Ali Wong grandios.",0,1],
+["Industry","Industry",2020,"Mickey Down","d",7.8,3,55,"Londoner Finanzwelt und ihre jungen Opfer.",1,1],
+["The Pacific","The Pacific",2010,"Tom Hanks","d",8.3,1,60,"Pazifikkrieg aus Soldatensicht. Band of Brothers Schwester.",0,0],
+["Game of Thrones","Game of Thrones",2011,"David Benioff","f",9.2,8,57,"Die prägendste Fantasieserie aller Zeiten. S1–6: Meisterwerk.",0,0],
+["House of the Dragon","House of the Dragon",2022,"Ryan Condal","f",8.4,2,65,"Targaryen-Vorgeschichte. Visuell grandios.",1,1],
+["Westworld","Westworld",2016,"Jonathan Nolan","f",8.5,4,57,"Freier Wille und KI. Staffel 1–2 sind Meisterwerke.",0,0],
+["Black Mirror","Black Mirror",2011,"Charlie Brooker","f",8.8,6,60,"Technologie und ihre Schattenseiten. Anthology.",1,0],
+["Stranger Things","Stranger Things",2016,"Duffer Brothers","f",8.7,5,50,"80er-Nostalgie trifft Horror. Mitreißend.",1,0],
+["The Expanse","The Expanse",2015,"Mark Fergus","f",8.5,6,44,"Realistischste Sci-Fi-Serie je produziert.",0,0],
+["Battlestar Galactica","Battlestar Galactica",2004,"Ronald D. Moore","f",8.7,4,44,"Sci-Fi als Politdrama und Philosophie. Zeitlos.",0,0],
+["The Haunting of Hill House","The Haunting of Hill House",2018,"Mike Flanagan","f",8.6,1,60,"Horror als Familientraumaverarbeitung. Berührend.",0,0],
+["The Leftovers","The Leftovers",2014,"Damon Lindelof","f",8.3,3,55,"2% der Menschheit verschwinden. Was kommt danach?",0,0],
+["Sense8","Sense8",2015,"Wachowskis","f",8.4,2,60,"Acht Gehirne, eine Verbindung. Visuell überwältigend.",0,0],
+["Lost","Lost",2004,"J.J. Abrams","f",8.3,6,44,"Flugzeugabsturz auf einer Insel. Nichts ist wie es scheint.",0,0],
+["Fringe","Fringe",2008,"J.J. Abrams","f",8.4,5,44,"FBI und Paralleluniversen. Unterschätzte Meisterserie.",0,0],
+["Fallout","Fallout",2024,"Geneva Robertson-Dworet","f",8.5,2,60,"Post-apokalyptisches Videospiel als gelungene Serie.",0,1],
+["Silo","Silo",2023,"Graham Yost","f",8.1,2,60,"Unterirdische Gesellschaft. Wozu die Lüge?",1,1],
+["Pantheon","Pantheon",2022,"Craig Silverstein","f",8.6,2,30,"Animierte KI-Sci-Fi. Philosophisch und unterschätzt.",0,1],
+["Avatar: Der Herr der Elemente","Avatar: The Last Airbender",2005,"Michael DiMartino","f",9.3,3,23,"Animiertes Meisterwerk. Für Kinder und Erwachsene.",0,0],
+["Das letzte Königreich","The Last Kingdom",2015,"Stephen Butchard","f",8.4,5,55,"Uhtred of Bebbanburg kämpft für sich selbst. Episch.",0,0],
+["Shogun","Shogun",2024,"Rachel Kondo","a",8.8,1,60,"Feudales Japan meisterhaft inszeniert.",0,1],
+["The Last of Us","The Last of Us",2023,"Craig Mazin","a",8.7,2,50,"Videospieladaption als bewegendes Epos. Episode 3: legendär.",1,1],
+["The Boys","The Boys",2019,"Eric Kripke","a",8.7,4,55,"Superheldengenre als bittere Gesellschaftskritik.",0,0],
+["The Mandalorian","The Mandalorian",2019,"Jon Favreau","a",8.7,3,40,"Star Wars mit Herz. Das Kind macht alles.",1,0],
+["Andor","Andor",2022,"Tony Gilroy","a",8.4,2,45,"Star Wars als ernsthafter politischer Thriller.",1,1],
+["Yellowstone","Yellowstone",2018,"Taylor Sheridan","a",8.7,5,55,"Dutton-Familie vs. alle. Taylor Sheridan am Höhepunkt.",0,0],
+["Warrior","Warrior",2019,"Jonathan Tropper","a",8.4,3,55,"Kung-Fu in Chinatown 1878. Unterschätzt und brillant.",1,0],
+["Vikings","Wikinger",2013,"Michael Hirst","a",8.5,6,44,"Ragnar Lothbrok als Antiheld. Stilvoll brutal.",0,0],
+["Banshee","Banshee",2013,"Jonathan Tropper","a",8.4,4,58,"Kleinstadtsheriff mit Vergangenheit. Brutal und fesselnd.",0,0],
+["24","24",2001,"Joel Surnow","a",8.4,8,44,"Echtzeit-Thriller. Jack Bauer im Dauereinsatz.",0,0],
+["Homeland","Homeland",2011,"Howard Gordon","a",8.2,8,52,"Erster Staffel: atemberaubend. Rest: sehr gut.",0,0],
+["Prison Break","Prison Break",2005,"Paul Scheuring","a",8.3,5,44,"Bruder bricht ins Gefängnis ein. Erste Staffel: top.",0,0],
+["Reacher","Reacher",2022,"Nick Santora","a",8.1,3,55,"Schlichter, brutaler Spaß. Eine Naturgewalt.",1,1],
+["The Office US","The Office",2005,"Greg Daniels","k",9.0,9,22,"Steve Carell als Michael Scott. Komödie schlechthin.",0,0],
+["Friends","Friends",1994,"Kauffman/Crane","k",8.9,10,22,"Zeitloser Klassiker. Sechs Freunde in New York.",0,0],
+["Ted Lasso","Ted Lasso",2020,"Jason Sudeikis","k",8.8,3,45,"Fußball-Coach ohne Ahnung. Herzerwärmend.",0,1],
+["It's Always Sunny","It's Always Sunny in Philadelphia",2005,"Rob McElhenney","k",8.8,16,22,"Frechste, gemeinste, witzigste Sitcom ever.",1,0],
+["Arrested Development","Arrested Development",2003,"Mitchell Hurwitz","k",8.7,5,22,"Schnellste Witzdichte im TV. Genies schreiben das.",0,0],
+["Curb Your Enthusiasm","Curb Your Enthusiasm",1999,"Larry David","k",8.7,12,30,"Larry David's fiktives Ich nervt alle. Kult.",0,0],
+["What We Do in the Shadows TV","What We Do in the Shadows",2019,"Jemaine Clement","k",8.6,6,30,"Vampire in Staten Island. Beste Mockumentary.",0,0],
+["Parks and Recreation","Parks and Recreation",2009,"Greg Daniels","k",8.6,7,22,"Leslie Knope ist das Beste. Warmherzig.",0,0],
+["Schitt's Creek","Schitt's Creek",2015,"Dan Levy","k",8.5,6,22,"Reiche Familie, kein Geld, kleines Nest. Liebevoll.",0,0],
+["Community","Community",2009,"Dan Harmon","k",8.5,6,22,"TV-Meta-Komödie auf Meisterniveau.",0,0],
+["Silicon Valley","Silicon Valley",2014,"Mike Judge","k",8.5,6,28,"Tech-Startup-Satire. Präzise und bissig.",0,0],
+["Cobra Kai","Cobra Kai",2018,"Josh Heald","k",8.6,6,30,"Karate Kid Sequel als überraschend tiefe Serie.",0,0],
+["Derry Girls","Derry Girls",2018,"Lisa McGee","k",8.6,3,25,"Nordirland in den 90ern. Herzlich und historisch.",0,0],
+["The Marvelous Mrs. Maisel","The Marvelous Mrs. Maisel",2017,"Amy Sherman-Palladino","k",8.7,5,57,"Stand-Up-Komödie in den 50ern.",0,0],
+["Veep","Veep",2012,"Armando Iannucci","k",8.3,7,28,"Politische Satire. Julia Louis-Dreyfus in Topform.",0,0],
+["Abbott Elementary","Abbott Elementary",2021,"Quinta Brunson","k",8.2,4,22,"Mockumentary in einer Grundschule. Warm.",1,1],
+["Hacks","Hacks",2021,"Lucia Aniello","k",8.1,3,30,"Stand-Up-Komikerin und ihre junge Schreiberin.",1,1],
+["Only Murders in the Building","Only Murders in the Building",2021,"Steve Martin","k",8.1,4,35,"True-Crime-Podcast-Macher lösen echten Mord.",1,1],
+["The Good Place","The Good Place",2016,"Michael Schur","k",8.2,4,22,"Tod und Ethik als Sitcom. Clever und liebevoll.",0,0],
+["Making a Murderer","Making a Murderer",2015,"Laura Ricciardi","o",8.6,2,55,"Steven Avery – schuldig oder Justizopfer?",0,0],
+["Wild Wild Country","Wild Wild Country",2018,"Chapman Way","o",8.2,1,60,"Bhagwan-Sekte in Oregon. Unglaublich und real.",0,0],
+["Unser Planet","Our Planet",2019,"Alastair Fothergill","o",9.3,2,50,"Attenborough über die Schönheit und den Verlust.",0,0],
+["Blauer Planet II","Blue Planet II",2017,"David Attenborough","o",9.3,1,60,"Tiefsee als unbekannter Kontinent. Weltklasse.",0,0],
+["Planet Erde III","Planet Earth III",2023,"Mike Gunton","o",9.1,1,55,"Attenboroughs Vermächtnis. Grandios.",0,1],
+["Chef's Table","Chef's Table",2015,"David Gelb","o",8.7,6,47,"Spitzenköche als Künstler. Jede Folge ein Film.",1,0],
+["Abstract: The Art of Design","Abstract",2017,"Scott Dadich","o",8.5,2,47,"Designer als Denker. Inspirierend.",0,0],
+["The Keepers","The Keepers",2017,"Ryan White","o",8.1,1,55,"Ungelöster Mordfall in Baltimore. Erschütternd.",0,0],
+["Don't F**k with Cats","Don't F**k with Cats",2019,"Mark Lewis","o",8.0,1,45,"Internet-Detektive jagen Tierquäler.",0,0],
+["Inside Bill's Brain","Inside Bill's Brain",2019,"Davis Guggenheim","o",8.0,1,70,"Wie Bill Gates denkt und lebt.",0,0],
+["Tiger King","Tiger King",2020,"Eric Goode","o",7.5,2,43,"Joe Exotic und seine Tiger. Irre und süchtig machend.",0,1],
+["Allen v. Farrow","Allen v. Farrow",2021,"Kirby Dick","o",8.1,1,55,"Woody Allen und Dylan Farrow. Sorgfältig.",0,1],
+["The Vow","The Vow",2020,"Jehane Noujaim","o",8.0,2,60,"NXIVM-Sekte von innen. Psychologisch tiefgehend.",0,1],
+["Beckham","Beckham",2023,"Fisher Stevens","o",8.0,1,55,"David Beckhams Leben. Ehrlicher als erwartet.",0,1],
+["Icarus","Icarus",2017,"Bryan Fogel","o",8.1,1,96,"Dopingskandal im Radsport. Wird zum Thriller.",0,0],
+["Flee","Flee",2021,"Jonas Poher Rasmussen","o",8.1,1,89,"Animiertes Refugee-Memoir. Berührender Genrebruch.",0,1]
+];
+
+// ═══════════════════════════════════════════════════════════
+// SHARED HELPERS
+// ═══════════════════════════════════════════════════════════
+const FILM_GL={t:"Thriller",d:"Drama",a:"Action",e:"Epos",f:"Fantasy",k:"Komödie",o:"Doku"};
+const SER_GL={t:"Thriller & Crime",d:"Drama",a:"Action",f:"Fantasy & Sci-Fi",k:"Komödie",o:"Doku"};
+const GENRE_LABELS=["Thriller","Drama","Action","Epos","Fantasy","Komödie","Doku"];
+
+function ic(v){return v>=8.5?"id":v>=8.0?"ic":v>=7.5?"ib":"ia"}
+function mi(v,r){
+  if(r==="0") return true;
+  if(r==="7.0-7.49") return v>=7.0&&v<7.5;
+  if(r==="7.5-7.99") return v>=7.5&&v<8.0;
+  if(r==="8.0-8.49") return v>=8.0&&v<8.5;
+  if(r==="8.5+") return v>=8.5;
+  return true;
+}
+function getSeen(){try{return JSON.parse(localStorage.getItem("kino_seen")||"{}");}catch(e){return {};}}
+function setSeen(k,v){const s=getSeen();s[k]=v;try{localStorage.setItem("kino_seen",JSON.stringify(s));}catch(e){}}
+
+// ═══════════════════════════════════════════════════════════
+// VIEW SWITCHING
+// ═══════════════════════════════════════════════════════════
+function showView(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  const el=document.getElementById(v==='filme'?'view-filme':v==='serien'?'view-serien':'home');
+  el.classList.add('active');
+  window.scrollTo(0,0);
+  if(v==='filme') renderFilms();
+  if(v==='serien') renderSeries();
+}
+
+// ═══════════════════════════════════════════════════════════
+// FILM STATE & RENDER
+// ═══════════════════════════════════════════════════════════
+let fg='all',fi='0',fr=0,frt=false,fht=false,fsq='';
+
+function renderFilms(){
+  const seen=getSeen();
+  const f=FILMS.filter(d=>{
+    if(fg!=='all'&&d[4]!==fg) return false;
+    if(!mi(d[5],fi)) return false;
+    if(fr===100&&d[6]>100) return false;
+    if(fr===120&&d[6]>120) return false;
+    if(fr===150&&d[6]>150) return false;
+    if(fr===999&&d[6]<=150) return false;
+    if(frt&&!d[8]) return false;
+    if(fht&&seen['f_'+d[0]+d[2]]) return false;
+    if(fsq){const q=fsq.toLowerCase();if(!d[0].toLowerCase().includes(q)&&!d[1].toLowerCase().includes(q)&&!d[3].toLowerCase().includes(q)&&!d[7].toLowerCase().includes(q))return false;}
+    return true;
+  }).sort((a,b)=>a[2]-b[2]);
+  document.getElementById('f-stats').textContent=f.length+' Filme von '+FILMS.length+' gesamt';
+  const grid=document.getElementById('f-grid');
+  if(!f.length){grid.innerHTML='<div class="empty">Keine Filme gefunden.</div>';return;}
+  grid.innerHTML=f.map(d=>{
+    const sk='f_'+d[0]+d[2];
+    const showO=d[1]!==d[0];
+    return `<div class="card${seen[sk]?' seen':''}" id="c_${sk}">
+<div class="card-top">
+<div><div class="card-title">${d[0]}${d[8]?'<span class="new-tag">neu</span>':''}</div>${showO?`<div class="card-orig">${d[1]}</div>`:''}</div>
+<div class="card-right"><span class="gbadge gb-${d[4]}">${FILM_GL[d[4]]}</span><span class="imdb-score ${ic(d[5])}">★ ${d[5].toFixed(1)}</span></div>
+</div>
+<div class="card-meta">${d[2]} · ${d[3]} · ${d[6]} min</div>
+<div class="card-note">${d[7]}</div>
+<div class="gseen-wrap"><input type="checkbox" class="gseen-cb" id="cb_${sk}" ${seen[sk]?'checked':''} onchange="toggleSeen('${sk}','c_${sk}',this.checked)"><label for="cb_${sk}">gesehen</label></div>
+</div>`;
+  }).join('');
+}
+
+function toggleSeen(key,cardId,val){
+  setSeen(key,val);
+  const card=document.getElementById(cardId);
+  if(card) card.classList.toggle('seen',val);
+  if((fht||sht)&&val) renderFilms(),renderSeries();
+}
+
+document.getElementById('fg').addEventListener('click',e=>{
+  const b=e.target.closest('[data-g]');if(!b)return;
+  document.querySelectorAll('#fg .pill').forEach(x=>x.classList.remove('active','t','d','a','e','f','k','o'));
+  b.classList.add('active');if(b.dataset.g!=='all')b.classList.add(b.dataset.g);
+  fg=b.dataset.g;renderFilms();
+});
+document.getElementById('fi').addEventListener('click',e=>{
+  const b=e.target.closest('[data-i]');if(!b)return;
+  document.querySelectorAll('#fi .pill').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');fi=b.dataset.i;renderFilms();
+});
+document.getElementById('fr').addEventListener('click',e=>{
+  const b=e.target.closest('[data-r]');if(!b)return;
+  document.querySelectorAll('#fr .pill').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');fr=parseInt(b.dataset.r)||0;renderFilms();
+});
+document.getElementById('f-rt').addEventListener('change',e=>{frt=e.target.checked;renderFilms();});
+document.getElementById('f-ht').addEventListener('change',e=>{fht=e.target.checked;renderFilms();});
+document.getElementById('f-search').addEventListener('input',e=>{fsq=e.target.value;renderFilms();});
+
+// ═══════════════════════════════════════════════════════════
+// SERIES STATE & RENDER
+// ═══════════════════════════════════════════════════════════
+let sg='all',si_='0',ss_=0,sst='all',srt=false,sht=false,ssq='';
+
+function renderSeries(){
+  const seen=getSeen();
+  const unique=new Map();
+  SERIES.forEach(d=>{const k=d[0]+d[2];if(!unique.has(k))unique.set(k,d);});
+  const all=[...unique.values()];
+  const f=all.filter(d=>{
+    if(sg!=='all'&&d[4]!==sg) return false;
+    if(!mi(d[5],si_)) return false;
+    if(ss_===1&&d[6]!==1) return false;
+    if(ss_===2&&(d[6]<2||d[6]>3)) return false;
+    if(ss_===4&&(d[6]<4||d[6]>6)) return false;
+    if(ss_===7&&d[6]<7) return false;
+    if(sst==='done'&&d[9]) return false;
+    if(sst==='on'&&!d[9]) return false;
+    if(srt&&!d[10]) return false;
+    if(sht&&seen['s_'+d[0]+d[2]]) return false;
+    if(ssq){const q=ssq.toLowerCase();if(!d[0].toLowerCase().includes(q)&&!d[1].toLowerCase().includes(q)&&!d[3].toLowerCase().includes(q)&&!d[8].toLowerCase().includes(q))return false;}
+    return true;
+  }).sort((a,b)=>a[2]-b[2]);
+  document.getElementById('s-stats').textContent=f.length+' Serien von '+all.length+' gesamt';
+  const grid=document.getElementById('s-grid');
+  if(!f.length){grid.innerHTML='<div class="empty">Keine Serien gefunden.</div>';return;}
+  grid.innerHTML=f.map(d=>{
+    const sk='s_'+d[0]+d[2];
+    const showO=d[1]!==d[0];
+    const iDE=d[0]==='Dark'||d[0]==='Babylon Berlin'||d[0]==='1899'||d[0]==='Das Boot';
+    return `<div class="card${seen[sk]?' seen':''}" id="c_${sk}">
+<div class="card-top">
+<div><div class="card-title">${d[0]}${d[10]?'<span class="new-tag">neu</span>':''}${iDE?'<span class="de-tag">🇩🇪</span>':''}</div>${showO?`<div class="card-orig">${d[1]}</div>`:''}</div>
+<div class="card-right"><span class="gbadge gb-${d[4]}">${SER_GL[d[4]]}</span><span class="imdb-score ${ic(d[5])}">★ ${d[5].toFixed(1)}</span></div>
+</div>
+<div class="card-meta"><span>ab ${d[2]} · ${d[3]}</span> · <span>${d[6]} Staffel${d[6]!==1?'n':''}</span> · <span>~${d[7]} min/Ep</span> <span class="status-badge ${d[9]?'s-on':'s-off'}">${d[9]?'▶ läuft noch':'✓ abgeschlossen'}</span></div>
+${d[8]?`<div class="card-note">${d[8]}</div>`:''}
+<div class="gseen-wrap"><input type="checkbox" class="gseen-cb" id="cb_${sk}" ${seen[sk]?'checked':''} onchange="toggleSeen('${sk}','c_${sk}',this.checked)"><label for="cb_${sk}">gesehen</label></div>
+</div>`;
+  }).join('');
+}
+
+document.getElementById('sg').addEventListener('click',e=>{
+  const b=e.target.closest('[data-g]');if(!b)return;
+  document.querySelectorAll('#sg .pill').forEach(x=>x.classList.remove('active','t','d','a','f','k','o'));
+  b.classList.add('active');if(b.dataset.g!=='all')b.classList.add(b.dataset.g);
+  sg=b.dataset.g;renderSeries();
+});
+document.getElementById('si').addEventListener('click',e=>{
+  const b=e.target.closest('[data-i]');if(!b)return;
+  document.querySelectorAll('#si .pill').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');si_=b.dataset.i;renderSeries();
+});
+document.getElementById('ss').addEventListener('click',e=>{
+  const b=e.target.closest('[data-s]');if(!b)return;
+  document.querySelectorAll('#ss .pill').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');ss_=parseInt(b.dataset.s)||0;renderSeries();
+});
+document.getElementById('sst').addEventListener('click',e=>{
+  const b=e.target.closest('[data-st]');if(!b)return;
+  document.querySelectorAll('#sst .pill').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');sst=b.dataset.st;renderSeries();
+});
+document.getElementById('s-rt').addEventListener('change',e=>{srt=e.target.checked;renderSeries();});
+document.getElementById('s-ht').addEventListener('change',e=>{sht=e.target.checked;renderSeries();});
+document.getElementById('s-search').addEventListener('input',e=>{ssq=e.target.value;renderSeries();});
+
+// ═══════════════════════════════════════════════════════════
+// RANDOM PICKER
+// ═══════════════════════════════════════════════════════════
+const GENRE_COLORS={t:"#c4a8f0",d:"#80d4b0",a:"#f0a080",e:"#f0d080",f:"#80c4f0",k:"#f090c8",o:"#c0c0c0"};
+const GENRE_NAMES_F={t:"Thriller",d:"Drama",a:"Action",e:"Epos",f:"Fantasy",k:"Komödie",o:"Doku"};
+
+function pickRandom(){
+  // Shuffle genres and pick 3 distinct ones
+  const genres=[...new Set(FILMS.map(d=>d[4]))];
+  for(let i=genres.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[genres[i],genres[j]]=[genres[j],genres[i]];}
+  const picked=genres.slice(0,3);
+
+  const results=picked.map(g=>{
+    const pool=FILMS.filter(d=>d[4]===g);
+    return pool[Math.floor(Math.random()*pool.length)];
+  });
+
+  const seen=getSeen();
+  const container=document.getElementById('random-results');
+  container.classList.remove('show');
+
+  container.innerHTML=results.map(d=>{
+    const showO=d[1]!==d[0];
+    const color=GENRE_COLORS[d[4]];
+    return `<div class="rcard">
+<div class="rcard-genre" style="color:${color}">${GENRE_NAMES_F[d[4]]}</div>
+<div class="rcard-title">${d[0]}</div>
+${showO?`<div class="rcard-orig">${d[1]}</div>`:''}
+<div class="rcard-meta">${d[2]} · ${d[3]} · ${d[6]} min</div>
+<div class="rcard-imdb ${ic(d[5])}">★ ${d[5].toFixed(1)}</div>
+<div class="rcard-note">${d[7]}</div>
+</div>`;
+  }).join('');
+
+  // Trigger animation
+  requestAnimationFrame(()=>requestAnimationFrame(()=>container.classList.add('show')));
+}
+</script>
+</body>
+</html>
